@@ -1,335 +1,110 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rei do Gole - Campo Minado 1 a 100</title>
+import random
+import streamlit as st
+
+# Configuração da Página
+st.set_page_config(
+    page_title="Rei do Gole - Campo Minado", page_icon="🍺", layout="centered"
+)
+
+# Estilização visual rápida via Markdown/CSS
+st.markdown(
+    """
     <style>
-        :root {
-            --bg-color: #121214;
-            --card-bg: #1e1e24;
-            --primary: #f59e0b;
-            --primary-hover: #d97706;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --text: #f3f4f6;
-            --subtext: #9ca3af;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 15px;
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-            40%, 60% { transform: translate3d(6px, 0, 0); }
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 500px;
-        }
-
-        h1 {
-            color: var(--primary);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .subtitle {
-            color: var(--subtext);
-            font-size: 0.9rem;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Configurações */
-        .config-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 6px;
-        }
-
-        .btn-opt {
-            background: #2a2a32;
-            border: 2px solid transparent;
-            color: var(--text);
-            padding: 6px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-opt.active {
-            border-color: var(--primary);
-            background: #3a3a45;
-            color: var(--primary);
-        }
-
-        /* Jogadores */
-        .player-input {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            background: #2a2a32;
-            border: 1px solid #3a3a45;
-            color: var(--text);
-            padding: 8px 12px;
-            border-radius: 8px;
-            outline: none;
-        }
-
-        .btn-add {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .players-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .player-chip {
-            background: #2a2a32;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .player-chip.active-turn {
-            border: 2px solid var(--primary);
-            background: #3a3a45;
-        }
-
-        /* Painel de Turno */
-        .turn-banner {
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-            color: #000;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        /* Grade 1 a 100 */
-        .grid-100 {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: 4px;
-            margin-top: 10px;
-        }
-
-        .num-btn {
-            aspect-ratio: 1;
-            background: #2a2a32;
-            border: none;
-            border-radius: 6px;
-            color: var(--text);
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.1s;
-        }
-
-        .num-btn:active {
-            transform: scale(0.9);
-        }
-
-        .num-btn.safe {
-            background: #14532d;
-            color: #4ade80;
-            cursor: default;
-        }
-
-        .num-btn.bomb {
-            background: var(--danger);
-            color: #fff;
-            animation: bounce 0.3s;
-        }
-
-        /* Placar */
-        .score-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 10px;
-            background: #2a2a32;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        /* Modal de Explosão */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 2px solid var(--danger);
-            border-radius: 16px;
-            padding: 25px;
-            text-align: center;
-            max-width: 350px;
-            width: 100%;
-        }
-
-        .modal-title {
-            color: var(--danger);
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .modal-body {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-
-        .btn-reset {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            width: 100%;
-        }
+    .main { background-color: #121214; color: #f3f4f6; }
+    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; }
     </style>
-</head>
-<body>
+""",
+    unsafe_allow_html=True,
+)
 
-    <header>
-        <h1>🍺 REI DO GOLE</h1>
-        <p class="subtitle">Campo Minado de 1 a 100</p>
-    </header>
+st.title("🍺 REI DO GOLE")
+st.subheader("Campo Minado (1 a 100)")
 
-    <div class="container" id="mainContainer">
+# Inicialização do Estado do Jogo (Sessão do Streamlit)
+if "bombas" not in st.session_state:
+  st.session_state.num_bombas = 3
+  st.session_state.bombas = random.sample(range(1, 101), st.session_state.num_bombas)
+  st.session_state.descobertos = []
+  st.session_state.jogadores = ["Amigo 1", "Amigo 2"]
+  st.session_state.pontuacao = {"Amigo 1": 0, "Amigo 2": 0}
+  st.session_state.turno = 0
+  st.session_state.jogo_acabou = False
 
-        <!-- Painel da Vez -->
-        <div class="turn-banner" id="turnBanner">
-            Vez de: <span id="currentTurnName">Adicione Jogadores</span>
-        </div>
+# Sidebar de Configurações
+with st.sidebar:
+  st.header("⚙️ Configurações")
 
-        <!-- Jogo -->
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span>💣 Bombas restantes: <strong id="bombsLeftCount">0</strong></span>
-                <button class="btn-opt" onclick="resetGame()">🔄 Reiniciar Grade</button>
-            </div>
-            <div class="grid-100" id="grid"></div>
-        </div>
+  # Escolha de bombas
+  novas_bombas = st.selectbox(
+      "Quantidade de Bombas", [1, 2, 3, 4, 5], index=2
+  )
+  if novas_bombas != st.session_state.num_bombas:
+    st.session_state.num_bombas = novas_bombas
+    st.session_state.bombas = random.sample(range(1, 101), novas_bombas)
+    st.session_state.descobertos = []
+    st.session_state.jogo_acabou = False
+    st.rerun()
 
-        <!-- Configurações -->
-        <div class="card">
-            <div class="config-group">
-                <span>Número de Bombas:</span>
-                <div class="btn-group">
-                    <button class="btn-opt" onclick="setBombCount(1)">1</button>
-                    <button class="btn-opt" onclick="setBombCount(2)">2</button>
-                    <button class="btn-opt active" onclick="setBombCount(3)">3</button>
-                    <button class="btn-opt" onclick="setBombCount(4)">4</button>
-                    <button class="btn-opt" onclick="setBombCount(5)">5</button>
-                </div>
-            </div>
+  st.divider()
+  st.subheader("👥 Jogadores")
+  novo_jogador = st.text_input("Adicionar Amigo:")
+  if st.button("Adicionar") and novo_jogador:
+    if novo_jogador not in st.session_state.jogadores:
+      st.session_state.jogadores.append(novo_jogador)
+      st.session_state.pontuacao[novo_jogador] = 0
+      st.rerun()
 
-            <div class="player-input">
-                <input type="text" id="playerName" placeholder="Nome do amigo...">
-                <button class="btn-add" onclick="addPlayer()">Adicionar</button>
-            </div>
+  if st.button("🔄 Reiniciar Jogo"):
+    st.session_state.bombas = random.sample(
+        range(1, 101), st.session_state.num_bombas
+    )
+    st.session_state.descobertos = []
+    st.session_state.jogo_acabou = False
+    st.rerun()
 
-            <div class="players-list" id="playersList"></div>
-        </div>
+# Painel da Vez
+jogador_atual = (
+    st.session_state.jogadores[
+        st.session_state.turno % len(st.session_state.jogadores)
+    ]
+    if st.session_state.jogadores
+    else "Ninguém"
+)
+st.markdown(
+    f"### 🎯 Vez de: <span style='color: #f59e0b;'>{jogador_atual}</span>",
+    unsafe_allow_html=True,
+)
 
-        <!-- Placar de Doses -->
-        <div class="card">
-            <h3 style="margin-bottom: 10px; color: var(--primary);">🍻 Placar de Castigos (Doses)</h3>
-            <div class="score-list" id="scoreList"></div>
-        </div>
-    </div>
+# Placar Lateral / Abaixo
+st.write("---")
+cols_placar = st.columns(len(st.session_state.jogadores) or 1)
+for i, jg in enumerate(st.session_state.jogadores):
+  with cols_placar[i]:
+    st.metric(label=jg, value=f"{st.session_state.pontuacao[jg]} doses")
 
-    <!-- Modal Explosão -->
-    <div class="modal" id="boomModal">
-        <div class="modal-content">
-            <div class="modal-title">💥 BOOM! 🍺</div>
-            <div class="modal-body">
-                <strong id="victimName" style="color: var(--primary);"></strong> achou a bomba!<br><br>
-                <strong>PENALIDADE:</strong> BEBA 1 DOSE/CHOPP!
-            </div>
-            <button class="btn-reset" onclick="closeModal()">Continuar Jogando</button>
-        </div>
-    </div>
+st.write("---")
+st.markdown("### 🎲 Escolha um número na grade:")
 
-    <script>
-        // Web Audio API para efeitos sonoros sintetizados
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+# Grade de 1 a 100 dividida em linhas de 10 botões
+for linha in range(10):
+  cols = st.columns(10)
+  for coluna in range(10):
+    num = linha * 10 + coluna + 1
+    with cols[coluna]:
+      if num in st.session_state.descobertos:
+        if num in st.session_state.bombas:
+          st.button("💥", key=f"btn_{num}", disabled=True)
+        else:
+          st.button("🍺", key=f"btn_{num}", disabled=True)
+      else:
+        if st.button(str(num), key=f"btn_{num}"):
+          st.session_state.descobertos.append(num)
+          if num in st.session_state.bombas:
+            st.session_state.pontuacao[jogador_atual] += 1
+            st.error(
+                f"💥 BOOM! {jogador_atual} achou a bomba e deve BEBER 1 DOSE!"
+            )
+          else:
+            # Avança o turno se for seguro
+            st.session_state.turno += 1
+          st.rerun()
